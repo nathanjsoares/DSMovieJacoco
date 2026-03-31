@@ -2,40 +2,53 @@ package com.devsuperior.dsmovie.services;
 
 import com.devsuperior.dsmovie.entities.UserEntity;
 import com.devsuperior.dsmovie.repositories.UserRepository;
+import com.devsuperior.dsmovie.tests.TokenUtil;
 import com.devsuperior.dsmovie.tests.UserFactory;
 import com.devsuperior.dsmovie.utils.CustomUserUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
-@ExtendWith(SpringExtension.class)
-@ContextConfiguration
+@SpringBootTest
+@AutoConfigureMockMvc
+@Transactional
 public class UserServiceTests {
 
 	@InjectMocks
 	private UserService service;
 
+	@Autowired
+	private TokenUtil tokenUtil;
+
+	@Autowired
+	private MockMvc mockMvc;
+
+	@Autowired
+	private CustomUserUtil userUtil;
+
 	@Mock
 	private UserRepository repository;
 
-	@Mock
-	private CustomUserUtil userUtil;
-
 	private String existingUsername, nonExistingUsername;
+	private String adminToken;
 	private UserEntity user;
 
 	@BeforeEach
 	void setUp() throws Exception {
 		existingUsername = "maria@gmail.com";
 		nonExistingUsername = "user@gmail.com";
+
+		adminToken = tokenUtil.obtainAccessToken(mockMvc, existingUsername, "123456");
 
 		user = UserFactory.createUserEntity();
 
