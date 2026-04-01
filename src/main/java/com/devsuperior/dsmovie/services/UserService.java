@@ -13,6 +13,7 @@ import com.devsuperior.dsmovie.entities.UserEntity;
 import com.devsuperior.dsmovie.projections.UserDetailsProjection;
 import com.devsuperior.dsmovie.repositories.UserRepository;
 import com.devsuperior.dsmovie.utils.CustomUserUtil;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UserService implements UserDetailsService {
@@ -49,5 +50,11 @@ public class UserService implements UserDetailsService {
 		}
 		
 		return user;
+	}
+
+	@Transactional(readOnly = true)
+	public UserEntity getMe() {
+		UserEntity entity = authenticated();
+		return entity;
 	}
 }

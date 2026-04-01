@@ -21,29 +21,33 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@Transactional
+import java.util.Optional;
+
 @ExtendWith(SpringExtension.class)
 public class UserServiceTests {
 
 	@InjectMocks
 	private UserService service;
 
-	@Autowired
-	private TokenUtil tokenUtil;
+	//@Autowired
+	//private TokenUtil tokenUtil;
 
-	@Autowired
-	private MockMvc mockMvc;
+	//@Autowired
+	//private MockMvc mockMvc;
 
-	@Autowired
+	@Mock
+	private UserService userService;
+
+	@Mock
 	private CustomUserUtil userUtil;
 
 	@Mock
 	private UserRepository repository;
 
 	private String existingUsername, nonExistingUsername;
-	private String adminToken;
+	//private String adminToken;
+	private UserEntity admin, selfClient, otherClient;
+
 	private UserEntity user;
 
 	@BeforeEach
@@ -51,19 +55,22 @@ public class UserServiceTests {
 		existingUsername = "maria@gmail.com";
 		nonExistingUsername = "user@gmail.com";
 
-		user = UserFactory.createUserEntity();
+		user = UserFactory.createCustomClientUser(1L, existingUsername);
 
-		adminToken = tokenUtil.obtainAccessToken(mockMvc, user.getUsername(), user.getPassword());
+		Mockito.when(repository.findByUsername(existingUsername)).thenReturn(Optional.of(user));
+		Mockito.when(repository.findByUsername(nonExistingUsername)).thenReturn(Optional.empty());
 
 	}
 
 	@Test
 	public void authenticatedShouldReturnUserEntityWhenUserExists() {
-		Mockito.when(userUtil.getLoggedUsername()).thenReturn(existingUsername);
-		UserEntity result = service.authenticated();
+		UserService spyUserService = Mockito.spy(service);
+		Mockito.doReturn(user).when(spyUserService).authenticated();
+
+		UserEntity result = spyUserService.getMe();
 
 		Assertions.assertNotNull(result);
-		Assertions.assertEquals(result.getUsername(), existingUsername);
+		Assertions.assertEquals(result.getName(), existingUsername);
 	}
 
 	@Test
@@ -78,11 +85,12 @@ public class UserServiceTests {
 	@Test
 	public void loadUserByUsernameShouldReturnUserDetailsWhenUserExists() {
 		UserService spyUserService = Mockito.spy(service);
-		Mockito.doReturn(user).when(spyUserService).authenticated();
+		Mockito.doReturn(admin).when(spyUserService).authenticated();
 		UserDetails result = spyUserService.loadUserByUsername(existingUsername);
 
 		Assertions.assertNotNull(result);
 		Assertions.assertEquals(result.getUsername(), existingUsername);
+
 	}
 
 	@Test
@@ -91,7 +99,6 @@ public class UserServiceTests {
 		Mockito.doThrow(UsernameNotFoundException.class).when(spyUserService).authenticated();
 
 		Assertions.assertThrows(UsernameNotFoundException.class, () -> {
-			@SuppressWarnings("unused")
 			UserDetails result = spyUserService.loadUserByUsername(nonExistingUsername);
 		});
 	}
