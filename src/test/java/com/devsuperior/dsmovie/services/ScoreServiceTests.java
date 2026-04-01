@@ -70,7 +70,6 @@ public class ScoreServiceTests {
 		scoreNonExistingMovieId.setMovie(movieNonExistingMovieId);
 
 		Mockito.when(repository.saveAndFlush(any())).thenReturn(score);
-		Mockito.doNothing().when(repository).delete(scoreNonExistingMovieId);
 	}
 	
 	@Test

@@ -51,9 +51,9 @@ public class UserServiceTests {
 		existingUsername = "maria@gmail.com";
 		nonExistingUsername = "user@gmail.com";
 
-		adminToken = tokenUtil.obtainAccessToken(mockMvc, existingUsername, "123456");
-
 		user = UserFactory.createUserEntity();
+
+		adminToken = tokenUtil.obtainAccessToken(mockMvc, user.getUsername(), user.getPassword());
 
 	}
 
