@@ -83,10 +83,10 @@ public class UserEntity implements UserDetails {
 		return roles;
 	}
 
-    public void addRole(RoleEntity role) {
-    	roles.add(role);
-    }
-    
+	public void addRole(RoleEntity role) {
+		roles.add(role);
+	}
+
 	@Override
 	public boolean isAccountNonExpired() {
 		return true;

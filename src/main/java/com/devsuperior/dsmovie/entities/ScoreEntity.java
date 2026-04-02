@@ -13,13 +13,13 @@ public class ScoreEntity {
 
 	@EmbeddedId
 	private ScoreEntityPK id = new ScoreEntityPK();
-	
+
 	@Column(name = "score_value")
 	private Double value;
-	
+
 	public ScoreEntity() {
 	}
-	
+
 	public void setMovie(MovieEntity movie) {
 		id.setMovie(movie);
 	}
@@ -27,7 +27,7 @@ public class ScoreEntity {
 	public void setUser(UserEntity user) {
 		id.setUser(user);
 	}
-	
+
 	public ScoreEntityPK getId() {
 		return id;
 	}

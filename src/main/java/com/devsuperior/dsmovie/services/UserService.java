@@ -13,14 +13,13 @@ import com.devsuperior.dsmovie.entities.UserEntity;
 import com.devsuperior.dsmovie.projections.UserDetailsProjection;
 import com.devsuperior.dsmovie.repositories.UserRepository;
 import com.devsuperior.dsmovie.utils.CustomUserUtil;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UserService implements UserDetailsService {
 
 	@Autowired
 	private UserRepository repository;
-	
+
 	@Autowired
 	private CustomUserUtil userUtil;
 
@@ -33,28 +32,22 @@ public class UserService implements UserDetailsService {
 			throw new UsernameNotFoundException("Invalid user");
 		}
 	}
-	
+
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-		
+
 		List<UserDetailsProjection> result = repository.searchUserAndRolesByUsername(username);
 		if (result.size() == 0) {
 			throw new UsernameNotFoundException("Email not found");
 		}
-		
+
 		UserEntity user = new UserEntity();
 		user.setUsername(result.get(0).getUsername());
 		user.setPassword(result.get(0).getPassword());
 		for (UserDetailsProjection projection : result) {
 			user.addRole(new RoleEntity(projection.getRoleId(), projection.getAuthority()));
 		}
-		
-		return user;
-	}
 
-	@Transactional(readOnly = true)
-	public UserEntity getMe() {
-		UserEntity entity = authenticated();
-		return entity;
+		return user;
 	}
 }

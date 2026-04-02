@@ -12,7 +12,7 @@ import com.devsuperior.dsmovie.projections.UserDetailsProjection;
 public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
 	Optional<UserEntity> findByUsername(String username);
-	
+
 	@Query(nativeQuery = true, value = """
 			SELECT tb_user.username AS username, tb_user.password, tb_role.id AS roleId, tb_role.authority
 			FROM tb_user

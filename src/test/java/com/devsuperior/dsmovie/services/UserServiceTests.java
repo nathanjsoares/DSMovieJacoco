@@ -1,76 +1,67 @@
 package com.devsuperior.dsmovie.services;
 
-import com.devsuperior.dsmovie.entities.UserEntity;
-import com.devsuperior.dsmovie.repositories.UserRepository;
-import com.devsuperior.dsmovie.tests.TokenUtil;
-import com.devsuperior.dsmovie.tests.UserFactory;
-import com.devsuperior.dsmovie.utils.CustomUserUtil;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
-import java.util.Optional;
+import com.devsuperior.dsmovie.entities.UserEntity;
+import com.devsuperior.dsmovie.projections.UserDetailsProjection;
+import com.devsuperior.dsmovie.repositories.UserRepository;
+import com.devsuperior.dsmovie.tests.UserDetailsFactory;
+import com.devsuperior.dsmovie.tests.UserFactory;
+import com.devsuperior.dsmovie.utils.CustomUserUtil;
 
-@ExtendWith(SpringExtension.class)
+@SpringJUnitConfig
 public class UserServiceTests {
 
 	@InjectMocks
 	private UserService service;
 
-	//@Autowired
-	//private TokenUtil tokenUtil;
-
-	//@Autowired
-	//private MockMvc mockMvc;
-
 	@Mock
-	private UserService userService;
+	private UserRepository repository;
 
 	@Mock
 	private CustomUserUtil userUtil;
 
-	@Mock
-	private UserRepository repository;
-
 	private String existingUsername, nonExistingUsername;
-	//private String adminToken;
-	private UserEntity admin, selfClient, otherClient;
-
-	private UserEntity user;
+	private UserEntity userEntity;
+	private List<UserDetailsProjection> userDetails;
 
 	@BeforeEach
 	void setUp() throws Exception {
+
 		existingUsername = "maria@gmail.com";
 		nonExistingUsername = "user@gmail.com";
 
-		user = UserFactory.createCustomClientUser(1L, existingUsername);
+		userEntity = UserFactory.createUserEntity();
+		userDetails = UserDetailsFactory.createCustomAdminUser(existingUsername);
 
-		Mockito.when(repository.findByUsername(existingUsername)).thenReturn(Optional.of(user));
+		Mockito.when(repository.searchUserAndRolesByUsername(existingUsername)).thenReturn(userDetails);
+		Mockito.when(repository.searchUserAndRolesByUsername(nonExistingUsername)).thenReturn(new ArrayList<>());
+
+		Mockito.when(repository.findByUsername(existingUsername)).thenReturn(Optional.of(userEntity));
 		Mockito.when(repository.findByUsername(nonExistingUsername)).thenReturn(Optional.empty());
 
 	}
 
 	@Test
 	public void authenticatedShouldReturnUserEntityWhenUserExists() {
-		UserService spyUserService = Mockito.spy(service);
-		Mockito.doReturn(user).when(spyUserService).authenticated();
+		Mockito.when(userUtil.getLoggedUsername()).thenReturn(existingUsername);
 
-		UserEntity result = spyUserService.getMe();
+		UserEntity result = service.authenticated();
 
 		Assertions.assertNotNull(result);
-		Assertions.assertEquals(result.getName(), existingUsername);
+		Assertions.assertEquals(result.getUsername(), existingUsername);
 	}
 
 	@Test
@@ -84,22 +75,16 @@ public class UserServiceTests {
 
 	@Test
 	public void loadUserByUsernameShouldReturnUserDetailsWhenUserExists() {
-		UserService spyUserService = Mockito.spy(service);
-		Mockito.doReturn(admin).when(spyUserService).authenticated();
-		UserDetails result = spyUserService.loadUserByUsername(existingUsername);
+		UserDetails result = service.loadUserByUsername(existingUsername);
 
 		Assertions.assertNotNull(result);
 		Assertions.assertEquals(result.getUsername(), existingUsername);
-
 	}
 
 	@Test
 	public void loadUserByUsernameShouldThrowUsernameNotFoundExceptionWhenUserDoesNotExists() {
-		UserService spyUserService = Mockito.spy(service);
-		Mockito.doThrow(UsernameNotFoundException.class).when(spyUserService).authenticated();
-
 		Assertions.assertThrows(UsernameNotFoundException.class, () -> {
-			UserDetails result = spyUserService.loadUserByUsername(nonExistingUsername);
+			service.loadUserByUsername(nonExistingUsername);
 		});
 	}
 }
